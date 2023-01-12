@@ -26,6 +26,10 @@ clock = pygame.time.Clock()
 translator = Translator()
 font_size_word = 100
 
+# Accuracy
+correct = 0
+wrong = 0
+
 pygame.init()
 # Set the window dimensions
 window_width = 1800
@@ -37,41 +41,44 @@ window.fill((13, 16, 17))
 # Set the window title
 pygame.display.set_caption('英単語が学べるタイピングゲーム')
 
+txt_data = 'data.txt'
+txt_words = 'words.txt'
+txt_accuracy = 'accuracy.txt'
 
 if not os.path.exists('data'):
     folder_name = 'data'
     os.makedirs(folder_name)
-if os.path.exists('data\\' + 'data.txt'):
-    with open('data\\' + 'data.txt', 'r', encoding='utf-8') as f:
+if os.path.exists('data\\' + txt_data):
+    with open('data\\' + txt_data, 'r', encoding='utf-8') as f:
         count, score = f.read().split(',')
         count = int(count)
         score = int(score)
-if os.path.exists('data\\' + 'words.txt'):
-    with open('data\\' + 'words.txt', 'r', encoding='utf-8') as f:
+if os.path.exists('data\\' + txt_words):
+    with open('data\\' + txt_words, 'r', encoding='utf-8') as f:
         words = f.read().split(',')
         wordsList = words
         # print(wordsList)
-    if os.path.exists('data\\' + 'data.txt'):
-        with open('data\\' + 'data.txt', 'r', encoding='utf-8') as f:
-            count, score = f.read().split(',')
-            count = int(count)
-            score = int(score)
-    else:
-        with open('data\\' + 'data.txt', 'w', encoding='utf-8') as f:
-            # Write to the file
-            count = 0
-            score = 0
-            f.write(f"{count},{score}")
+
+if os.path.exists('data\\' + txt_accuracy):
+    with open('data\\' + txt_accuracy, 'r', encoding='utf-8') as f:
+        correct,wrong = f.read().split(',')
+        correct = int(correct)
+        wrong = int(wrong)
+
 else:
-    with open('data\\' + 'words.txt', 'w', encoding='utf-8') as f:
+    with open('data\\' + txt_words, 'w', encoding='utf-8') as f:
         # Write to the file
         wordsList = []
         f.write('')
-    with open('data\\' + 'data.txt', 'w', encoding='utf-8') as f:
+    with open('data\\' + txt_data, 'w', encoding='utf-8') as f:
         # Write to the file
         count = 0
         score = 0
         f.write(f"{count},{score}")
+    with open('data\\' + txt_accuracy, 'w', encoding='utf-8') as f:
+        correct = int(correct)
+        wrong = int(wrong)
+        f.write(f"{correct},{wrong}")
 
 
 def count_score():
@@ -94,12 +101,36 @@ def count_score():
     # Display the letters
     window.blit(show_count, text_rect_count)
     window.blit(show_score, text_rect_score)
+    display_accuracy(correct,wrong)
 
+
+def display_accuracy(correct,wrong):
+    if correct == 0 and wrong == 0:
+        show_accuracy = font_count.render("Start Typing", True, fontColor_plus)
+    else:
+        if correct == 0:
+            accuracy = 0
+        elif wrong == 0:
+            accuracy = 100
+        else:
+            accuracy = round((int(correct)/int(wrong+correct))*100,1)
+        if accuracy >= 50:
+            show_accuracy = font_count.render(f"{accuracy}%", True, fontColor_plus)
+        elif accuracy <= 0:
+            show_accuracy = font_count.render("0%", True, fontColor_minus)
+        else:
+            show_accuracy = font_count.render(f"{accuracy}%", True, fontColor_minus)
+    # Create a rect for the text surface and center it in the window
+    text_rect_accuracy = show_accuracy.get_rect()
+    # Display location
+    text_rect_accuracy.center = (window_width / 2, window_height - 20)
+    # Display the letters
+    window.blit(show_accuracy, text_rect_accuracy)
 
 font_count = pygame.font.Font("Consolas.ttf", 20)
 history_font = pygame.font.Font("NotoSansJP-Regular.otf", 20)
 count_score()
-
+display_accuracy(correct,wrong)
 
 async def translate_async(word: str, src: str, dest: str) -> str:
     async with aiohttp.ClientSession() as session:
@@ -264,7 +295,7 @@ while running:
                 file_name = f'data {str(dt_string)} (backup).txt'
                 with open('data\\' + file_name, 'w') as f:
                     f.write(f"{str(count)},{str(score)}")
-                with open('data\\' + 'data.txt', 'w') as f:
+                with open('data\\' + txt_data, 'w') as f:
                     # Write to the file
                     score = 0
                     f.write(f"{count},{score}")
@@ -277,9 +308,16 @@ while running:
                     typed_words = ''.join(f'{str(x)},' for x in wordsList)
                     # Write to the file
                     f.write(typed_words)
-                with open('data\\' + 'words.txt', 'w') as f:
+                with open('data\\' + txt_words, 'w') as f:
                     f.write(" ")
                     wordsList = []
+                file_name = f'accuracy {str(dt_string)} (backup).txt'
+                with open('data\\' + file_name, 'w', encoding="utf-8") as f:
+                    f.write(f"{correct},{wrong}")
+                with open('data\\' + txt_accuracy, 'w', encoding='utf-8') as f:
+                    correct = 0
+                    wrong = 0
+                    f.write(f"{correct},{wrong}")
                 counter = 0
                 count = 0
                 # print(f"Count: {count}")
@@ -288,45 +326,46 @@ while running:
                 pygame.display.update()
             if keys[pygame.K_LALT]:
                 pass
-            elif event.unicode.lower() == word[counter].lower():
-                # print('Correct!')
-                # Increment the counter
-                counter += 1
-                score += 1
-                fontColor_remain = (31, 215, 85)
-                # print(f"+1 counter: {counter}")
-                # print(f"+1 score: {score}")
-                if counter == len(word):
-                    fontColor_remain = (255, 255, 255)
-                    show_the_word(word)
-                    word = random_word.get_random_word()
-                    counter = 0
-                    count += 1
-                    update_typed()
-                    update_display()
-                    # Update the display
-                    pygame.display.update()
-                # display_history()
-                update_word()
-                count_score()
             else:
-                # print('Incorrect')
-                if keys[pygame.K_ESCAPE] == False:
+                if event.unicode.lower() == word[counter].lower():
+                    # print('Correct!')
+                    # Increment the counter
+                    counter += 1
+                    score += 1
+                    correct += 1
+                    fontColor_remain = (31, 215, 85)
+                    # print(f"+1 counter: {counter}")
+                    # print(f"+1 score: {score}")
+                    if counter == len(word):
+                        fontColor_remain = (255, 255, 255)
+                        show_the_word(word)
+                        word = random_word.get_random_word()
+                        counter = 0
+                        count += 1
+                        update_typed()
+                        update_display()
+                        # Update the display
+                        pygame.display.update()
+                    # display_history()
+                    update_word()
+                    count_score()
+                elif keys[pygame.K_ESCAPE] == False:
                     fontColor_remain = (255, 0, 0)
                     score -= 1
-                # display_history()
-                count_score()
-                update_word()
-                # Update the display
-                pygame.display.update()
-                # print(f"-1 score: {score}")
+                    wrong += 1
+                    # display_history()
+                    count_score()
+                    update_word()
+                    # Update the display
+                    pygame.display.update()
+                    # print(f"-1 score: {score}")
         if event.type == pygame.QUIT:
             # Open the file in write mode
-            with open('data\\' + 'data.txt', 'w') as f:
+            with open('data\\' + txt_data, 'w', encoding='utf-8') as f:
                 # Write to the file
                 f.write(f"{str(count)},{str(score)}")
             if len(wordsList) != 0:
-                with open('data\\' + 'words.txt', 'w', encoding='utf-8') as f:
+                with open('data\\' + txt_words, 'w', encoding='utf-8') as f:
                     # print(f"Typed words: {wordsList}")
                     # Remove empty in array
                     while "" in wordsList:
@@ -337,4 +376,6 @@ while running:
                     # print(typed_words)
                     # Write to the file
                     f.write(typed_words)
+            with open('data\\' + txt_accuracy, 'w', encoding='utf-8') as f:
+                f.write(f"{correct},{wrong}")
             running = False

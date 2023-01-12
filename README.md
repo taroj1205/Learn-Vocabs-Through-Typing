@@ -24,5 +24,5 @@
 * 入力した単語が正しい場合、スコアがプラスされます。
 * 入力した単語が誤っている場合、スコアがマイナスされます。
 * 画面上に、現在のスコアと出題された単語数が表示されます。また、左上には今まで出題された単語数が表示されています。最新のものには` <`がついているので最後に打った単語がどれか分かりやすくなっています。
-* スコアと単語数は[ESC]キーでリセットできます。この際、リセット前のスコアと単語数は`data`フォルダーに`data Year-Month-Date (backup).txt`、出題された単語の履歴は`words Year-Month-Date (backup)`として自動でバックアップとして保存されます。
-* ゲーム終了時、`data`フォルダーにスコアと単語数を`data.txt`、出題された単語の履歴は`words.txt`として保存され、起動したときに読み込まれます。
+* スコアと単語数は[ESC]キーでリセットできます。この際、リセット前のスコアと単語数は`data`フォルダーに`data Year-Month-Date Hour-Minute-Seconds (backup).txt`、出題された単語の履歴は`words Year-Month-Date Hour-Minute-Seconds (backup).txt`、正解数と不正回数を`accuracy Year-Month-Date Hour-Minute-Seconds (backup).txt`として自動でバックアップとして保存されます。
+* ゲーム終了時、`data`フォルダーにスコアと単語数を`data.txt`、出題された単語の履歴は`words.txt`、正解数と不正回数は`accuracy.txt`として保存され、起動したときに読み込まれます。
